@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>訊息紀錄</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap">
+  <style>
+    :root {
+      --primary-color: #4a6fa5;
+      --secondary-color: #f8f9fa;
+      --red-color: #e63946;
+      --orange-color: #ff9a3c;
+      --blue-color: #457b9d;
+      --gray-color: #6c757d;
+      --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: 'Noto Sans TC', Arial, sans-serif;
+      background-color: #f5f7fa;
+      padding: 0;
+      color: #333;
+      line-height: 1.6;
+    }
+    
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    
+    header {
+      background-color: var(--primary-color);
+      color: white;
+      padding: 20px;
+      border-radius: 10px 10px 0 0;
+      margin-bottom: 20px;
+      box-shadow: var(--shadow);
+    }
+    
+    h1 {
+      font-size: 1.8rem;
+      margin-bottom: 10px;
+    }
+    
+    .status-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background-color: var(--secondary-color);
+      padding: 12px 16px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      box-shadow: var(--shadow);
+    }
+    
+    .status-item {
+      display: flex;
+      align-items: center;
+      font-size: 0.9rem;
+      color: var(--gray-color);
+    }
+    
+    .status-item::before {
+      margin-right: 8px;
+    }
+    
+    #lastUpdate::before {
+      content: "🔄";
+    }
+    
+    #nextUpdate::before {
+      content: "⏱️";
+    }
+    
+    #countdownTime {
+      font-weight: bold;
+      color: var(--primary-color);
+    }
+    
+    #logList {
+      list-style-type: none;
+      min-height: 200px;
+      position: relative;
+    }
+    
+    .log-card {
+      background-color: white;
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 12px;
+      box-shadow: var(--shadow);
+      position: relative;
+      overflow: hidden;
+      opacity: 0;
+      transform: translateY(20px);
+      animation: fadeIn 0.5s ease forwards;
+    }
+    
+    @keyframes fadeIn {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
+    .log-card:nth-child(1) { animation-delay: 0.1s; }
+    .log-card:nth-child(2) { animation-delay: 0.2s; }
+    .log-card:nth-child(3) { animation-delay: 0.3s; }
+    .log-card:nth-child(4) { animation-delay: 0.4s; }
+    .log-card:nth-child(5) { animation-delay: 0.5s; }
+    .log-card:nth-child(n+6) { animation-delay: 0.6s; }
+    
+    .log-card .timestamp {
+      font-size: 0.8rem;
+      color: var(--gray-color);
+      margin-bottom: 8px;
+    }
+    
+    .log-card .message {
+      font-size: 1rem;
+    }
+    
+    .closed-eyes {
+      border-left: 4px solid var(--red-color);
+    }
+    
+    .closed-eyes .message {
+      color: var(--red-color);
+      font-weight: bold;
+    }
+    
+    .yawn {
+      border-left: 4px solid var(--orange-color);
+    }
+    
+    .yawn .message {
+      color: var(--orange-color);
+    }
+    
+    .head-down {
+      border-left: 4px solid var(--blue-color);
+    }
+    
+    .head-down .message {
+      color: var(--blue-color);
+    }
+    
+    .loader-container {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background-color: rgba(255, 255, 255, 0.8);
+      z-index: 10;
+      border-radius: 8px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+    
+    .loader-container.show {
+      opacity: 1;
+      pointer-events: all;
+    }
+    
+    .loader {
+      width: 50px;
+      height: 50px;
+      border: 5px solid #f3f3f3;
+      border-top: 5px solid var(--primary-color);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    
+    .update-indicator {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 18px;
+      height: 18px;
+      margin-left: 8px;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+    
+    .update-indicator.show {
+      opacity: 1;
+    }
+    
+    .update-indicator .spinner {
+      width: 16px;
+      height: 16px;
+      border: 2px solid transparent;
+      border-top-color: var(--primary-color);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    
+    @media (max-width: 768px) {
+      .container {
+        padding: 10px;
+      }
+      
+      header {
+        padding: 15px;
+      }
+      
+      .status-bar {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      
+      .status-item {
+        margin-bottom: 8px;
+      }
+      
+      .status-item:last-child {
+        margin-bottom: 0;
+      }
+      
+      .log-card {
+        padding: 12px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>訊息監控系統</h1>
+      <p>學生狀態即時追蹤</p>
+    </header>
+    
+    <div class="status-bar">
+      <div id="lastUpdate" class="status-item">
+        上次更新: --
+        <div class="update-indicator" id="updateSpinner">
+          <div class="spinner"></div>
+        </div>
+      </div>
+      <div id="nextUpdate" class="status-item">下次更新: <span id="countdownTime">10</span> 秒</div>
+    </div>
+    
+    <div style="position: relative;">
+      <div id="loaderContainer" class="loader-container show">
+        <div class="loader"></div>
+      </div>
+      <ul id="logList"></ul>
+    </div>
+  </div>
+
+  <script>
+    const endpoint = 'https://script.google.com/macros/s/AKfycbxBo7X7Pt57zSm0LZzYcczPbzWJq1s5uFI-WnPtJsI_mMJq9IfC5efl9oH3l550EQLuDQ/exec'; // 替換為你的 URL
+    const updateInterval = 10; // 更新間隔(秒)
+    let countdown = updateInterval;
+    let countdownTimer;
+    let isFirstLoad = true;
+    
+    function updateLastUpdateTime() {
+      const lastUpdateElement = document.getElementById('lastUpdate');
+      const text = document.createTextNode(`上次更新: ${new Date().toLocaleString()}`);
+      
+      // 替換第一個節點（舊的時間文本）
+      if (lastUpdateElement.childNodes.length > 0 && lastUpdateElement.firstChild.nodeType === Node.TEXT_NODE) {
+        lastUpdateElement.replaceChild(text, lastUpdateElement.firstChild);
+      } else {
+        lastUpdateElement.insertBefore(text, lastUpdateElement.firstChild);
+      }
+      
+      // 隱藏更新指示器
+      document.getElementById('updateSpinner').classList.remove('show');
+      
+      // 重置倒數計時
+      countdown = updateInterval;
+      updateCountdown();
+      
+      // 清除之前的計時器
+      if (countdownTimer) {
+        clearInterval(countdownTimer);
+      }
+      
+      // 開始新的倒數計時
+      countdownTimer = setInterval(() => {
+        countdown--;
+        if (countdown <= 0) {
+          countdown = 0;
+          clearInterval(countdownTimer);
+        }
+        updateCountdown();
+      }, 1000);
+    }
+    
+    function updateCountdown() {
+      const countdownElement = document.getElementById('countdownTime');
+      countdownElement.textContent = countdown;
+      
+      // 如果倒數到1秒，顯示更新指示器
+      if (countdown === 1) {
+        document.getElementById('updateSpinner').classList.add('show');
+      }
+    }
+
+    function fetchData() {
+      // 顯示載入畫面
+      const loaderContainer = document.getElementById('loaderContainer');
+      if (!isFirstLoad) {
+        loaderContainer.classList.add('show');
+      }
+      
+      fetch(endpoint)
+        .then(response => response.json())
+        .then(data => {
+          const list = document.getElementById('logList');
+          list.innerHTML = ''; // 清空列表
+          
+          data.forEach(entry => {
+            const li = document.createElement('li');
+            const cardDiv = document.createElement('div');
+            cardDiv.className = 'log-card';
+            
+            const timestampDiv = document.createElement('div');
+            timestampDiv.className = 'timestamp';
+            timestampDiv.textContent = new Date(entry.timestamp).toLocaleString();
+            
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message';
+            messageDiv.textContent = entry.message;
+            
+            // 根據訊息內容加上 class 標示
+            if (entry.message.includes("閉眼")) {
+              cardDiv.classList.add("closed-eyes");
+            } else if (entry.message.includes("哈欠")) {
+              cardDiv.classList.add("yawn");
+            } else if (entry.message.includes("低頭")) {
+              cardDiv.classList.add("head-down");
+            }
+
+            cardDiv.appendChild(timestampDiv);
+            cardDiv.appendChild(messageDiv);
+            li.appendChild(cardDiv);
+            list.appendChild(li);
+          });
+          
+          updateLastUpdateTime();
+          
+          // 隱藏載入畫面，延遲以確保動畫效果
+          setTimeout(() => {
+            loaderContainer.classList.remove('show');
+            isFirstLoad = false;
+          }, 500);
+        })
+        .catch(error => {
+          console.error('載入資料失敗:', error);
+          // 發生錯誤時也要隱藏載入畫面
+          loaderContainer.classList.remove('show');
+          isFirstLoad = false;
+        });
+    }
+
+    // 初次載入
+    fetchData();
+    
+    // 設定每10秒自動更新一次
+    setInterval(fetchData, updateInterval * 1000);
+  </script>
+</body>
+</html>
