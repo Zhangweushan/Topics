@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>測試訊息發送</title>
+  <style>
+    body { font-family: Arial; padding: 20px; }
+    input, button { padding: 6px 10px; font-size: 16px; margin-top: 10px; }
+    #status { margin-top: 10px; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <h2>測試訊息發送</h2>
+  <label for="msgInput">訊息內容：</label><br>
+  <input type="text" id="msgInput" placeholder="輸入訊息..."><br>
+  <button onclick="sendMessage()">發送</button>
+
+  <div id="status"></div>
+
+  <script>
+    const postUrl = 'https://script.google.com/macros/s/AKfycbxBo7X7Pt57zSm0LZzYcczPbzWJq1s5uFI-WnPtJsI_mMJq9IfC5efl9oH3l550EQLuDQ/exec';
+
+    function sendMessage() {
+      const msg = document.getElementById('msgInput').value;
+      const status = document.getElementById('status');
+      
+      if (!msg.trim()) {
+        status.textContent = '請輸入訊息內容';
+        status.style.color = 'red';
+        return;
+      }
+
+      fetch(postUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: 'message=' + encodeURIComponent(msg)
+      })
+      .then(response => response.text())
+      .then(text => {
+        status.textContent = '發送成功: ' + text;
+        status.style.color = 'green';
+        document.getElementById('msgInput').value = '';
+      })
+      .catch(error => {
+        status.textContent = '發送失敗: ' + error;
+        status.style.color = 'red';
+      });
+    }
+  </script>
+</body>
+</html>
