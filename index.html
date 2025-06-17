@@ -701,6 +701,55 @@
       statusElement.style.animation = 'fadeIn 0.5s ease forwards';
     }
 
+    function updateLogList(logs) {
+      const logList = document.getElementById('logList');
+      logList.innerHTML = ''; // 清空現有內容
+      
+      // 移除載入動畫
+      const loader = logList.querySelector('.loader-container');
+      if (loader) {
+        loader.remove();
+      }
+      
+      if (logs.length === 0) {
+        logList.innerHTML = '<div class="log-card">目前沒有紀錄</div>';
+        return;
+      }
+      
+      // 建立新的紀錄列表
+      logs.forEach(log => {
+        const logCard = document.createElement('div');
+        logCard.className = 'log-card';
+        
+        // 根據訊息內容添加不同的樣式
+        if (log.message.includes('閉眼')) {
+          logCard.classList.add('closed-eyes');
+        } else if (log.message.includes('打哈欠')) {
+          logCard.classList.add('yawn');
+        } else if (log.message.includes('低頭')) {
+          logCard.classList.add('head-down');
+        }
+        
+        const timestamp = new Date(log.timestamp);
+        const formattedTime = timestamp.toLocaleString('zh-TW', {
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit',
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit',
+          hour12: false
+        });
+        
+        logCard.innerHTML = `
+          <div class="timestamp">${formattedTime}</div>
+          <div class="message">${log.message}</div>
+        `;
+        
+        logList.appendChild(logCard);
+      });
+    }
+
     function fetchData() {
       // 顯示載入畫面
       const loaderContainer = document.getElementById('loaderContainer');
